@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="initial-scale=1.0, width=device-width" name="viewport">
+    <title>Web じゃんけん</title>
+    <style>
+        .loading {
+            width: 60px;
+            height: 60px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            border-radius: 50%;
+            border: solid 20px;
+            border-color: #25ccff #2a97f3 #2a97f3;
+            animation: rotation 1s infinite linear;
+        }
+
+        @keyframes rotation {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <script defer src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script defer src="https://unpkg.com/socket.io-client@4.8.1/dist/socket.io.js"></script>
+    <script defer src="https://unpkg.com/vue3-sfc-loader"></script>
+    <script defer src="https://code.jquery.com/jquery-2.2.4.min.js"
+        integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script defer src="./cs_constants.js"></script>
+    <script defer src="./client.js"></script>
+</head>
+
+<body>
+    <div class="loading"></div>
+    <noscript>
+        <div>JavaScript が無効のためページを表示できません。JavaScript を有効にしてください。</div>
+    </noscript>
+</body>
+
+</html>
