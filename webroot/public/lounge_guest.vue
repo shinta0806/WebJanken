@@ -4,10 +4,6 @@
 //
 // ============================================================================
 
-// ====================================================================
-// View
-// ====================================================================
-
 <template>
     <div>
         <p>ラウンジ（ゲスト）</p>
@@ -17,6 +13,8 @@
         <p>{{ errorMessage }}</p>
     </div>
 </template>
+
+<style></style>
 
 <script>
 import loungeBase from "./lounge_base.vue";
@@ -55,11 +53,13 @@ export default {
         this.socket.on("connect", () => {
             // 既存グループ参加依頼
             //console.log(this.socket);
+            //console.log(this.groupConst);
             this.socket.emit(csConstants.socketEvents.joinGroup, this.groupConst);
         });
 
         // 人数通知が来た
         this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
+            console.log(this.vueApp);
             this.numParticipants = numParticipants;
         });
 
@@ -68,5 +68,3 @@ export default {
     },
 }
 </script>
-
-<style></style>

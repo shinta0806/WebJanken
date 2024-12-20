@@ -9,11 +9,11 @@
 // 
 // ----------------------------------------------------------------------------
 
-async function client() {
-    // vue3-sfc-loader の設定
+// vue3-sfc-loader の設定
+function loadModuleOptions() {
     // https://github.com/FranckFreiburger/vue3-sfc-loader
     // getFile() addStyle() は index.ts で使用される
-    const options = {
+    return {
         moduleCache: {
             vue: Vue
         },
@@ -32,14 +32,18 @@ async function client() {
             document.head.insertBefore(style, ref);
         },
     }
+}
+
+async function client() {
+    const options = loadModuleOptions();
     const { loadModule } = window["vue3-sfc-loader"];
 
     // アプリとコンポーネント
     let vueApp;
     let component;
-    let params = (new URL(location.href)).searchParams;
     let props = {};
-    let group = params.get(csConstants.params.group);
+    const params = (new URL(location.href)).searchParams;
+    const group = params.get(csConstants.params.group);
     if (group) {
         // グループが指定されている場合はゲスト
         component = "./lounge_guest.vue";

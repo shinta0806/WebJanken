@@ -4,10 +4,6 @@
 //
 // ============================================================================
 
-// ====================================================================
-// View
-// ====================================================================
-
 <template>
     <div>
         <p>ラウンジ（ホスト）</p>
@@ -18,6 +14,8 @@
         <p>{{ errorMessage }}</p>
     </div>
 </template>
+
+<style></style>
 
 <script>
 import loungeBase from "./lounge_base.vue";
@@ -82,6 +80,7 @@ export default {
 
         // グループ UUID 通知が来た
         this.socket.on(csConstants.socketEvents.groupUuid, (uuid) => {
+            //console.log(this.vueApp);
             this.groupUuid = uuid;
             this.invitationUrl = this.uuidToInvitationUrl(uuid);
             document.getElementById("showQr").textContent = "";
@@ -99,9 +98,3 @@ export default {
     },
 }
 </script>
-
-// ====================================================================
-// CSS
-// ====================================================================
-
-<style></style>

@@ -210,6 +210,10 @@ async function onStartPlayRequestedAsync(io, socket) {
     const groupRecord = await selectGroupByIdAsync(db, memberRecord[dbc.member.cGroup]);
 
     // グループステータス更新
+    if (groupRecord[dbc.group.cStatus] == dbc.group.status.playing) {
+        // 多重にプレイ開始を受領
+        throw new Error("既にプレイ開始されています。");
+    }
     groupRecord[dbc.group.cStatus] = dbc.group.status.playing;
     await updateGroupAsync(db, groupRecord);
 
