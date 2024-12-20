@@ -40,11 +40,6 @@ export default {
     methods: {
         // ソケットイベントハンドラー（ホストとゲストの共通部分）を設定
         setSocketOn() {
-            // 人数通知が来た
-            this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
-                this.numParticipants = numParticipants;
-            });
-
             // エラー通知が来た
             this.socket.on(csConstants.socketEvents.errorMessage, (errorMessage) => {
                 this.errorMessage = errorMessage;

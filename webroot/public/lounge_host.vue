@@ -14,7 +14,7 @@
         <p>グループを作ります。一緒にプレイしたい人に、以下の URL にアクセスしてもらってください。</p>
         <div id="showQr"></div>
         <p>{{ invitationUrl }}</p>
-        <button @click="greet">{{ numParticipants }} 人でプレイ開始</button>
+        <button @click="onPlayClicked" :disabled="isPlayButtonDisabled">{{ numParticipants }} 人でプレイ開始</button>
         <p>{{ errorMessage }}</p>
     </div>
 </template>
@@ -37,6 +37,9 @@ export default {
         return {
             // 招待 URL
             invitationUrl: null,
+
+            // プレイ開始ボタン無効化
+            isPlayButtonDisabled: true,
         };
     },
 
@@ -74,6 +77,12 @@ export default {
             this.invitationUrl = this.uuidToInvitationUrl(uuid);
             document.getElementById("showQr").textContent = "";
             new QRCode(document.getElementById("showQr"), this.invitationUrl);
+        });
+
+        // 人数通知が来た
+        this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
+            this.numParticipants = numParticipants;
+            this.isPlayButtonDisabled = numParticipants == 1;
         });
 
         // ホスト・ゲスト共通イベント

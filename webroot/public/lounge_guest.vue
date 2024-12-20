@@ -58,6 +58,11 @@ export default {
             this.socket.emit(csConstants.socketEvents.joinGroup, this.groupConst);
         });
 
+        // 人数通知が来た
+        this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
+            this.numParticipants = numParticipants;
+        });
+
         // ホスト・ゲスト共通イベント
         this.setSocketOn();
     },
