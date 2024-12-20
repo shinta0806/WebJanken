@@ -37,8 +37,19 @@ class tableMember {
     cGroup = "member_group";
     cSerial = "member_serial";
     cName = "member_name";
-    cPlayOrder = "member_play_order";
     cStatus = "member_status";
+    cSocket = "member_socket";
+
+    // ステータス
+    status = new memberStatus();
+}
+
+class memberStatus {
+    // プレイ中
+    playing = 0;
+
+    // 棄権（切断）
+    withdrew = 1;
 }
 
 // ====================================================================

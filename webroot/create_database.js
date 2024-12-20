@@ -54,10 +54,12 @@ db.serialize(() => {
         + dbc.member.cGroup + " " + dbc.tInt + " " + dbc.pNotNull + ", "
         + dbc.member.cSerial + " " + dbc.tInt + " " + dbc.pNotNull + ", "
         + dbc.member.cName + " " + dbc.tText + " " + dbc.pNotNull + ", "
-        + dbc.member.cPlayOrder + " " + dbc.tInt + " " + dbc.pNotNull + ", "
-        + dbc.member.cStatus + " " + dbc.tInt + " " + dbc.pNotNull + ")";
+        + dbc.member.cStatus + " " + dbc.tInt + " " + dbc.pNotNull + ", "
+        + dbc.member.cSocket + " " + dbc.tText + " " + dbc.pNotNull + ")";
     run(db, sentence);
     sentence = "create index index_" + dbc.member.cGroup + " on " + dbc.member.t + "(" + dbc.member.cGroup + ")";
+    run(db, sentence);
+    sentence = "create index index_" + dbc.member.cSocket + " on " + dbc.member.t + "(" + dbc.member.cSocket + ")";
     run(db, sentence);
 });
 

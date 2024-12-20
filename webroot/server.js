@@ -26,7 +26,7 @@ const httpServer = http.Server(expressApp);
 setSocket.setSocket(httpServer);
 
 // 待ち受け
-const port = 3000;
+const port = process.env.PORT || 3000;
 httpServer.listen(port, function () {
   console.log("稼働開始。ポート番号：" + httpServer.address().port);
 });
