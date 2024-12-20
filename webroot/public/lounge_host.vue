@@ -20,27 +20,23 @@
 </template>
 
 <script>
+import loungeBase from "./lounge_base.vue";
+
 export default {
+    // ====================================================================
+    // 継承
+    // ====================================================================
+
+    extends: loungeBase,
+
     // ====================================================================
     // リアクティブ
     // ====================================================================
 
     data() {
         return {
-            // グループ UUID
-            groupUuid: null,
-
             // 招待 URL
             invitationUrl: null,
-
-            // 参加人数
-            numParticipants: 1,
-
-            // エラーメッセージ
-            errorMessage: null,
-
-            // ソケット通信用
-            socket: null,
         };
     },
 
@@ -62,7 +58,7 @@ export default {
     // ====================================================================
 
     beforeMount() {
-        // ソケット接続中
+        // ソケットインスタンス作成時に接続しに行く
         this.socket = io();
 
         // 接続時イベント
@@ -80,15 +76,8 @@ export default {
             new QRCode(document.getElementById("showQr"), this.invitationUrl);
         });
 
-        // 人数通知が来た
-        this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
-            this.numParticipants = numParticipants;
-        });
-
-        // エラー通知が来た
-        this.socket.on(csConstants.socketEvents.errorMessage, (errorMessage) => {
-            this.errorMessage = errorMessage;
-        });
+        // ホスト・ゲスト共通イベント
+        this.setSocketOn();
     },
 }
 </script>

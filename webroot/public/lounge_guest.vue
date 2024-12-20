@@ -19,7 +19,15 @@
 </template>
 
 <script>
+import loungeBase from "./lounge_base.vue";
+
 export default {
+    // ====================================================================
+    // 継承
+    // ====================================================================
+
+    extends: loungeBase,
+
     // ====================================================================
     // 構築時受領
     // ====================================================================
@@ -32,17 +40,6 @@ export default {
 
     data() {
         return {
-            // 確認済のグループ UUID
-            groupUuid: null,
-
-            // 参加人数
-            numParticipants: 1,
-
-            // エラーメッセージ
-            errorMessage: null,
-
-            // ソケット通信用
-            socket: null,
         };
     },
 
@@ -51,27 +48,19 @@ export default {
     // ====================================================================
 
     beforeMount() {
-        // ソケット接続中
+        // ソケットインスタンス作成時に接続しに行く
         this.socket = io();
 
         // 接続時イベント
         this.socket.on("connect", () => {
             // 既存グループ参加依頼
-            console.log(this.socket);
+            //console.log(this.socket);
             this.socket.emit(csConstants.socketEvents.joinGroup, this.groupConst);
         });
 
-        // 人数通知が来た
-        this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
-            this.numParticipants = numParticipants;
-        });
-
-        // エラー通知が来た
-        this.socket.on(csConstants.socketEvents.errorMessage, (errorMessage) => {
-            this.errorMessage = errorMessage;
-        });
+        // ホスト・ゲスト共通イベント
+        this.setSocketOn();
     },
-
 }
 </script>
 
