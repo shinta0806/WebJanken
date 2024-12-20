@@ -25,6 +25,9 @@ class socketEvents {
     // 参加人数
     numParticipants = "numParticipants";
 
+    // プレイ開始
+    startPlay = "startPlay";
+
     // エラー発生
     errorMessage = "errorMessage";
 }

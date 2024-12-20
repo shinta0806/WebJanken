@@ -14,7 +14,23 @@ const csc = require("../public/cs_constants");
 const dbc = require("./db_constants");
 const julianDay = require("./julian_day");
 
-// 指定されたグループ ID（整数）を検索し、レコードを返す
+// グループを更新（更新の可能性があるカラムのみ）
+async function updateGroupAsync(db, groupRecord) {
+    let sentence = "update " + dbc.group.t + " set "
+        + dbc.group.cStatus + " = ? "
+        + "where " + dbc.group.cId + " = ?";
+    await new Promise((resolve, reject) => {
+        db.run(sentence, groupRecord[dbc.group.cStatus], groupRecord[dbc.group.cId], (err) => {
+            if (err) {
+                reject(new Error("グループを更新できませんでした：" + groupRecord[dbc.group.cId]));
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+// 指定されたグループ ID（整数）でグループを検索し、レコードを返す
 async function selectGroupByIdAsync(db, id) {
     let sentence = "select * from " + dbc.group.t + " where " + dbc.group.cId + " = ?";
     return await new Promise((resolve, reject) => {
@@ -28,7 +44,7 @@ async function selectGroupByIdAsync(db, id) {
     });
 }
 
-// 指定されたグループ UUID を検索し、レコードを返す
+// 指定されたグループ UUID でグループを検索し、レコードを返す
 async function selectGroupByUuidAsync(db, uuid) {
     let sentence = "select * from " + dbc.group.t + " where " + dbc.group.cUuid + " = ?";
     return await new Promise((resolve, reject) => {
@@ -40,43 +56,6 @@ async function selectGroupByUuidAsync(db, uuid) {
             }
         });
     });
-}
-
-// 参加者の数
-async function countMemberAsync(db, groupId) {
-    let sentence = "select count(*) from " + dbc.member.t
-        + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
-    return await new Promise((resolve, reject) => {
-        db.get(sentence, groupId, dbc.member.status.playing, (err, res) => {
-            if (res) {
-                resolve(res["count(*)"]);
-            } else {
-                reject(new Error("指定されたグループは存在しません：" + uuid));
-            }
-        });
-    });
-}
-
-// メンバーを更新（更新の可能性があるカラムのみ）
-async function updateMemberAsync(db, memberRecord) {
-    let sentence = "update " + dbc.member.t + " set "
-        + dbc.member.cName + " = ?, " + dbc.member.cStatus + " = ? "
-        + "where " + dbc.member.cId + " = ?";
-    await new Promise((resolve, reject) => {
-        db.run(sentence, memberRecord[dbc.member.cName], memberRecord[dbc.member.cStatus], memberRecord[dbc.member.cId], (err) => {
-            if (err) {
-                reject(new Error("メンバー更新できませんでした：" + memberRecord[dbc.member.cGroup] + ", " + memberRecord[dbc.member.cName]));
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-
-// 参加人数をグループ全員に通知
-async function notifyNumParticipantsAsync(io, db, groupRecord) {
-    let numParticipants = await countMemberAsync(db, groupRecord[dbc.group.cId]);
-    io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.numParticipants, numParticipants);
 }
 
 // メンバーを登録
@@ -98,18 +77,70 @@ async function insertMemberAsync(db, groupId, socketId) {
     // 登録
     let sentence = "insert into " + dbc.member.t
         + "(" + dbc.member.cGroup + ", " + dbc.member.cSerial + ", " + dbc.member.cName + ", "
-        + dbc.member.cStatus + ", " + dbc.member.cSocket + ") "
-        + "values(?, ?, ?, ?, ?)";
+        + dbc.member.cStatus + ", " + dbc.member.cSocket + ", " + dbc.member.cTactics + ", " + dbc.member.cPoint + ") "
+        + "values(?, ?, ?, ?, ?, ?, ?)";
     await new Promise((resolve, reject) => {
-        db.run(sentence, groupId, serial, name, dbc.member.status.playing, socketId, (err) => {
+        db.run(sentence, groupId, serial, name, dbc.member.status.playing, socketId, dbc.member.tactics.thinking, 0,
+            (err) => {
+                if (err) {
+                    reject(new Error("メンバー登録できませんでした：" + groupId + ", " + name));
+                } else {
+                    console.log("メンバー登録：" + groupId + ", " + name + ", " + socketId);
+                    resolve();
+                }
+            });
+    });
+}
+
+// メンバーを更新（更新の可能性があるカラムのみ）
+async function updateMemberAsync(db, memberRecord) {
+    let sentence = "update " + dbc.member.t + " set "
+        + dbc.member.cName + " = ?, " + dbc.member.cStatus + " = ? "
+        + "where " + dbc.member.cId + " = ?";
+    await new Promise((resolve, reject) => {
+        db.run(sentence, memberRecord[dbc.member.cName], memberRecord[dbc.member.cStatus], memberRecord[dbc.member.cId], (err) => {
             if (err) {
-                reject(new Error("メンバー登録できませんでした：" + groupId + ", " + name));
+                reject(new Error("メンバー更新できませんでした：" + memberRecord[dbc.member.cGroup] + ", " + memberRecord[dbc.member.cName]));
             } else {
-                console.log("メンバー登録：" + groupId + ", " + name + ", " + socketId);
                 resolve();
             }
         });
     });
+}
+
+// 指定されたソケット ID でメンバーを検索し、レコードを返す
+async function selectMemberBySocketIdAsync(db, socketId) {
+    let sentence = "select * from " + dbc.member.t + " where " + dbc.member.cSocket + " = ?";
+    return await new Promise((resolve, reject) => {
+        db.get(sentence, socketId, (err, res) => {
+            if (res) {
+                resolve(res);
+            } else {
+                reject(new Error("指定されたメンバーは存在しません：" + socketId));
+            }
+        });
+    });
+}
+
+// 参加者の数
+async function countMemberAsync(db, groupId) {
+    let sentence = "select count(*) from " + dbc.member.t
+        + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
+    return await new Promise((resolve, reject) => {
+        db.get(sentence, groupId, dbc.member.status.playing, (err, res) => {
+            if (res) {
+                resolve(res["count(*)"]);
+            } else {
+                reject(new Error("指定されたグループは存在しません：" + uuid));
+            }
+        });
+    });
+}
+
+// 参加人数をグループ全員に通知
+async function notifyNumParticipantsAsync(io, db, groupRecord) {
+    let numParticipants = await countMemberAsync(db, groupRecord[dbc.group.cId]);
+    io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.numParticipants, numParticipants);
 }
 
 // 新規グループ作成イベント
@@ -126,7 +157,7 @@ async function onNewGroupRequestedAsync(socket) {
         + "(" + dbc.group.cUuid + ", " + dbc.group.cCreated + ", " + dbc.group.cStatus + ") "
         + "values(?, ?, ?)";
     await new Promise((resolve, reject) => {
-        db.run(sentence, uuid, created, 0, (err) => {
+        db.run(sentence, uuid, created, dbc.group.status.hiring, (err) => {
             if (err) {
                 reject(new Error("グループ UUID が重複しました：" + uuid + ", " + err));
             } else {
@@ -168,21 +199,30 @@ async function onJoinGroupRequestedAsync(io, socket, groupUuid) {
     await notifyNumParticipantsAsync(io, db, groupRecord);
 }
 
+// プレイ開始イベント（ホストから受領し、ホストを含む全員にプレイ開始イベントを送信）
+async function onStartPlayRequestedAsync(io, socket) {
+    const db = new sqlite3.Database(dbc.path);
+
+    // メンバー検索
+    const memberRecord = await selectMemberBySocketIdAsync(db, socket.id);
+
+    // グループ検索
+    const groupRecord = await selectGroupByIdAsync(db, memberRecord[dbc.member.cGroup]);
+
+    // グループステータス更新
+    groupRecord[dbc.group.cStatus] = dbc.group.status.playing;
+    await updateGroupAsync(db, groupRecord);
+
+    // プレイ開始を全員に通知
+    io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.startPlay);
+}
+
 // 切断イベント
 async function onDisconnectedAsync(io, socket) {
     const db = new sqlite3.Database(dbc.path);
 
     // メンバー検索
-    let sentence = "select * from " + dbc.member.t + " where " + dbc.member.cSocket + " = ?";
-    const memberRecord = await new Promise((resolve, reject) => {
-        db.get(sentence, socket.id, (err, res) => {
-            if (res) {
-                resolve(res);
-            } else {
-                reject(new Error("指定されたメンバーは存在しません：" + uuid));
-            }
-        });
-    });
+    const memberRecord = await selectMemberBySocketIdAsync(db, socket.id);
 
     // ステータスを変更
     memberRecord[dbc.member.cStatus] = dbc.member.status.withdrew;
@@ -223,6 +263,15 @@ function setSocket(httpServer) {
         socket.on(csc.socketEvents.joinGroup, async (group) => {
             try {
                 await onJoinGroupRequestedAsync(io, socket, group);
+            } catch (e) {
+                notifyException(socket, e);
+            }
+        });
+
+        // プレイ開始イベント
+        socket.on(csc.socketEvents.startPlay, async () => {
+            try {
+                await onStartPlayRequestedAsync(io, socket);
             } catch (e) {
                 notifyException(socket, e);
             }

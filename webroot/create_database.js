@@ -55,7 +55,9 @@ db.serialize(() => {
         + dbc.member.cSerial + " " + dbc.tInt + " " + dbc.pNotNull + ", "
         + dbc.member.cName + " " + dbc.tText + " " + dbc.pNotNull + ", "
         + dbc.member.cStatus + " " + dbc.tInt + " " + dbc.pNotNull + ", "
-        + dbc.member.cSocket + " " + dbc.tText + " " + dbc.pNotNull + ")";
+        + dbc.member.cSocket + " " + dbc.tText + " " + dbc.pNotNull + ", "
+        + dbc.member.cTactics + " " + dbc.tInt + " " + dbc.pNotNull + ", "
+        + dbc.member.cPoint + " " + dbc.tInt + " " + dbc.pNotNull + ")";
     run(db, sentence);
     sentence = "create index index_" + dbc.member.cGroup + " on " + dbc.member.t + "(" + dbc.member.cGroup + ")";
     run(db, sentence);

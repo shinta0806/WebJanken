@@ -22,6 +22,17 @@ class tableGroup {
     cUuid = "group_uuid";
     cCreated = "group_created";
     cStatus = "group_status";
+
+    // ステータス
+    status = new groupStatus();
+}
+
+class groupStatus {
+    // 参加者募集中
+    hiring = 0;
+
+    // プレイ中
+    playing = 1;
 }
 
 // ====================================================================
@@ -39,9 +50,14 @@ class tableMember {
     cName = "member_name";
     cStatus = "member_status";
     cSocket = "member_socket";
+    cTactics = "member_tactics";
+    cPoint = "member_point";
 
     // ステータス
     status = new memberStatus();
+
+    // 出した手
+    tactics = new memberTactics();
 }
 
 class memberStatus {
@@ -50,6 +66,20 @@ class memberStatus {
 
     // 棄権（切断）
     withdrew = 1;
+}
+
+class memberTactics {
+    // 思考中
+    thinking = 0;
+
+    // グー
+    gu = 1;
+
+    // チョキ
+    choki = 2;
+
+    // パー
+    pa = 3;
 }
 
 // ====================================================================

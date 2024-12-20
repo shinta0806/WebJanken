@@ -13,7 +13,7 @@
         <p>ラウンジ（ホスト）</p>
         <p>グループを作ります。一緒にプレイしたい人に、以下の URL にアクセスしてもらってください。</p>
         <div id="showQr"></div>
-        <p>{{ invitationUrl }}</p>
+        <p>{{ invitationUrl }} <button @click="onCopyClicked">コピー</button></p>
         <button @click="onPlayClicked" :disabled="isPlayButtonDisabled">{{ numParticipants }} 人でプレイ開始</button>
         <p>{{ errorMessage }}</p>
     </div>
@@ -54,6 +54,15 @@ export default {
             let base = location.href.substring(0, pathnamePos + location.pathname.length);
             return base + "?" + csConstants.params.group + "=" + uuid;
         },
+
+        onCopyClicked() {
+            // 非同期メソッドだが待つ必要は無い
+            navigator.clipboard.writeText(this.invitationUrl);
+        },
+
+        onPlayClicked() {
+            this.socket.emit(csConstants.socketEvents.startPlay);
+        }
     },
 
     // ====================================================================
