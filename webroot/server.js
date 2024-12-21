@@ -25,6 +25,28 @@ const setSocket = require("./lib/socket");
 const httpServer = http.Server(expressApp);
 setSocket.setSocket(httpServer);
 
+/*
+const cscl = require("./public/cs_classes");
+const a = new cscl.participantInfo("agasa", 9);
+console.log(a);
+
+const b = JSON.stringify(a);
+console.log(b);
+
+const c =  JSON.parse(b);
+console.log(c);
+
+const d = Object.assign(new cscl.participantInfo(), JSON.parse(b));
+console.log(d);
+
+const e = '{"NOTname":"jack","point":5}';
+const f =  JSON.parse(e);
+console.log(f);
+
+const g = Object.assign(new cscl.participantInfo(), JSON.parse(e)); // エラーにはならず、{ name: undefined, point: 5, NOTname: 'jack' }
+console.log(g);
+*/
+
 // 待ち受け
 const port = process.env.PORT || 3000;
 httpServer.listen(port, function () {

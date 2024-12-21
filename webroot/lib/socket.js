@@ -143,6 +143,26 @@ async function notifyNumParticipantsAsync(io, db, groupRecord) {
     io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.numParticipants, numParticipants);
 }
 
+// 参加者情報をグループ全員に通知
+async function notifyparticipantInfoAsync(db, groupRecord) {
+
+    let sentence = "select * from " + dbc.member.t
+        + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
+    await new Promise((resolve, reject) => {
+        db.each(sentence, groupRecord[dbc.group.cId], dbc.member.status.playing, (err, res) => {
+            if (res) {
+                console.log(res);
+            } else {
+                console.log("!res");
+            }
+        }, () => {
+            console.log("complete");
+            resolve();
+        });
+    });
+    console.log("notifyparticipantInfoAsync z");
+}
+
 // 新規グループ作成イベント
 async function onNewGroupRequestedAsync(socket) {
     // UUID 決定
@@ -219,6 +239,9 @@ async function onStartPlayRequestedAsync(io, socket) {
 
     // プレイ開始を全員に通知
     io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.startPlay);
+
+    // 参加者情報を全員に通知
+    await notifyparticipantInfoAsync(db, groupRecord);
 }
 
 // 切断イベント
@@ -232,6 +255,7 @@ async function onDisconnectedAsync(io, socket) {
     memberRecord[dbc.member.cStatus] = dbc.member.status.withdrew;
     await updateMemberAsync(db, memberRecord);
     console.log("メンバー削除：" + memberRecord[dbc.member.cGroup] + ", " + memberRecord[dbc.member.cName] + ", " + socket.id);
+    // ToDo: ソケットからも削除
 
     // 参加人数をグループ全員に通知
     const groupRecord = await selectGroupByIdAsync(db, memberRecord[dbc.member.cGroup]);
