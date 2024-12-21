@@ -76,12 +76,6 @@ export default {
             // 新規グループ作成依頼
             //console.log(this.socket);
             this.socket.emit(csConstants.socketEvents.newGroup);
-
-            // test
-            /*
-            let a = new participantInfo("conan", 7);
-            console.log(a);
-            */
         });
 
         // グループ UUID 通知が来た

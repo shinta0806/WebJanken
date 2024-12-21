@@ -16,10 +16,10 @@ const julianDay = require("./julian_day");
 
 // グループを更新（更新の可能性があるカラムのみ）
 async function updateGroupAsync(db, groupRecord) {
-    let sentence = "update " + dbc.group.t + " set "
-        + dbc.group.cStatus + " = ? "
-        + "where " + dbc.group.cId + " = ?";
     await new Promise((resolve, reject) => {
+        const sentence = "update " + dbc.group.t + " set "
+            + dbc.group.cStatus + " = ? "
+            + "where " + dbc.group.cId + " = ?";
         db.run(sentence, groupRecord[dbc.group.cStatus], groupRecord[dbc.group.cId], (err) => {
             if (err) {
                 reject(new Error("グループを更新できませんでした：" + groupRecord[dbc.group.cId]));
@@ -32,8 +32,8 @@ async function updateGroupAsync(db, groupRecord) {
 
 // 指定されたグループ ID（整数）でグループを検索し、レコードを返す
 async function selectGroupByIdAsync(db, id) {
-    let sentence = "select * from " + dbc.group.t + " where " + dbc.group.cId + " = ?";
     return await new Promise((resolve, reject) => {
+        const sentence = "select * from " + dbc.group.t + " where " + dbc.group.cId + " = ?";
         db.get(sentence, id, (err, res) => {
             if (res) {
                 resolve(res);
@@ -46,8 +46,8 @@ async function selectGroupByIdAsync(db, id) {
 
 // 指定されたグループ UUID でグループを検索し、レコードを返す
 async function selectGroupByUuidAsync(db, uuid) {
-    let sentence = "select * from " + dbc.group.t + " where " + dbc.group.cUuid + " = ?";
     return await new Promise((resolve, reject) => {
+        const sentence = "select * from " + dbc.group.t + " where " + dbc.group.cUuid + " = ?";
         db.get(sentence, uuid, (err, res) => {
             if (res) {
                 resolve(res);
@@ -75,11 +75,11 @@ async function insertMemberAsync(db, groupId, socketId) {
     }
 
     // 登録
-    let sentence = "insert into " + dbc.member.t
-        + "(" + dbc.member.cGroup + ", " + dbc.member.cSerial + ", " + dbc.member.cName + ", "
-        + dbc.member.cStatus + ", " + dbc.member.cSocket + ", " + dbc.member.cTactics + ", " + dbc.member.cPoint + ") "
-        + "values(?, ?, ?, ?, ?, ?, ?)";
     await new Promise((resolve, reject) => {
+        const sentence = "insert into " + dbc.member.t
+            + "(" + dbc.member.cGroup + ", " + dbc.member.cSerial + ", " + dbc.member.cName + ", "
+            + dbc.member.cStatus + ", " + dbc.member.cSocket + ", " + dbc.member.cTactics + ", " + dbc.member.cPoint + ") "
+            + "values(?, ?, ?, ?, ?, ?, ?)";
         db.run(sentence, groupId, serial, name, dbc.member.status.playing, socketId, dbc.member.tactics.thinking, 0,
             (err) => {
                 if (err) {
@@ -94,10 +94,10 @@ async function insertMemberAsync(db, groupId, socketId) {
 
 // メンバーを更新（更新の可能性があるカラムのみ）
 async function updateMemberAsync(db, memberRecord) {
-    let sentence = "update " + dbc.member.t + " set "
-        + dbc.member.cName + " = ?, " + dbc.member.cStatus + " = ? "
-        + "where " + dbc.member.cId + " = ?";
     await new Promise((resolve, reject) => {
+        const sentence = "update " + dbc.member.t + " set "
+            + dbc.member.cName + " = ?, " + dbc.member.cStatus + " = ? "
+            + "where " + dbc.member.cId + " = ?";
         db.run(sentence, memberRecord[dbc.member.cName], memberRecord[dbc.member.cStatus], memberRecord[dbc.member.cId], (err) => {
             if (err) {
                 reject(new Error("メンバー更新できませんでした：" + memberRecord[dbc.member.cGroup] + ", " + memberRecord[dbc.member.cName]));
@@ -110,8 +110,8 @@ async function updateMemberAsync(db, memberRecord) {
 
 // 指定されたソケット ID でメンバーを検索し、レコードを返す
 async function selectMemberBySocketIdAsync(db, socketId) {
-    let sentence = "select * from " + dbc.member.t + " where " + dbc.member.cSocket + " = ?";
     return await new Promise((resolve, reject) => {
+        const sentence = "select * from " + dbc.member.t + " where " + dbc.member.cSocket + " = ?";
         db.get(sentence, socketId, (err, res) => {
             if (res) {
                 resolve(res);
@@ -124,9 +124,9 @@ async function selectMemberBySocketIdAsync(db, socketId) {
 
 // 参加者の数
 async function countMemberAsync(db, groupId) {
-    let sentence = "select count(*) from " + dbc.member.t
-        + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
     return await new Promise((resolve, reject) => {
+        const sentence = "select count(*) from " + dbc.member.t
+            + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
         db.get(sentence, groupId, dbc.member.status.playing, (err, res) => {
             if (res) {
                 resolve(res["count(*)"]);
@@ -139,7 +139,7 @@ async function countMemberAsync(db, groupId) {
 
 // 参加人数をグループ全員に通知
 async function notifyNumParticipantsAsync(io, db, groupRecord) {
-    let numParticipants = await countMemberAsync(db, groupRecord[dbc.group.cId]);
+    const numParticipants = await countMemberAsync(db, groupRecord[dbc.group.cId]);
     io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.numParticipants, numParticipants);
 }
 
@@ -173,10 +173,10 @@ async function onNewGroupRequestedAsync(socket) {
 
     // グループテーブルに新規グループを登録
     const created = julianDay.dateTimeToModifiedJulianDate(new Date());
-    let sentence = "insert into " + dbc.group.t
-        + "(" + dbc.group.cUuid + ", " + dbc.group.cCreated + ", " + dbc.group.cStatus + ") "
-        + "values(?, ?, ?)";
     await new Promise((resolve, reject) => {
+        const sentence = "insert into " + dbc.group.t
+            + "(" + dbc.group.cUuid + ", " + dbc.group.cCreated + ", " + dbc.group.cStatus + ") "
+            + "values(?, ?, ?)";
         db.run(sentence, uuid, created, dbc.group.status.hiring, (err) => {
             if (err) {
                 reject(new Error("グループ UUID が重複しました：" + uuid + ", " + err));
@@ -274,10 +274,7 @@ function setSocket(httpServer) {
 
     // socket.io 接続イベント
     io.on("connection", (socket) => {
-
         // 接続以外のクライアントからのイベント受信は io.on() ではなく socket.on() であることに注意
-        //console.log("connection: " + socket.id);
-
         // 新規グループ作成イベント
         socket.on(csc.socketEvents.newGroup, async () => {
             try {
