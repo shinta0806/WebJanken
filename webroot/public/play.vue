@@ -10,24 +10,25 @@
 
 <template>
     <p>プレイ</p>
+    <p>{{ errorMessage }}</p>
 </template>
 
 <script>
 export default {
+    // ====================================================================
+    // 構築時受領
+    // ====================================================================
+
+    props: ["socket", "vueApp"],
+
     // ====================================================================
     // リアクティブ
     // ====================================================================
 
     data() {
         return {
-            // 参加人数
-            numParticipants: 0,
-
             // エラーメッセージ
             errorMessage: null,
-
-            // ソケット通信用
-            socket: null,
         };
     },
 
@@ -36,6 +37,20 @@ export default {
     // ====================================================================
 
     methods: {
+    },
+
+    // ====================================================================
+    // イベントハンドラー
+    // ====================================================================
+
+    beforeMount() {
+        // 参加者情報群が来た
+        this.socket.on(csConstants.socketEvents.participantInfos, (participantInfosString) => {
+            console.log(participantInfosString);
+        });
+
+        // socket.on イベントハンドラー設定完了後
+        this.socket.emit(csConstants.socketEvents.playReady);
     },
 }
 </script>

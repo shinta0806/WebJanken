@@ -89,6 +89,7 @@ export default {
 
         // 人数通知が来た
         this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
+            //console.log("host 人数通知受領");
             this.numParticipants = numParticipants;
             this.isPlayButtonDisabled = numParticipants == 1;
         });

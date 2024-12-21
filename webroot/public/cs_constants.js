@@ -28,6 +28,12 @@ class socketEvents {
     // プレイ開始
     startPlay = "startPlay";
 
+    // プレイ開始準備完了
+    playReady = "playReady";
+
+    // 参加者情報群
+    participantInfos = "participantInfos";
+
     // エラー発生
     errorMessage = "errorMessage";
 }

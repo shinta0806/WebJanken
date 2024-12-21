@@ -47,7 +47,8 @@ export default {
             // プレイ開始通知が来た
             this.socket.on(csConstants.socketEvents.startPlay, () => {
                 let vueApp = this.vueApp;
-                console.log(vueApp);
+                //console.log(vueApp);
+                // ToDo: socket.on イベントハンドラー解除
                 vueApp.unmount();
 
                 // 新しいコンポーネント
@@ -58,6 +59,8 @@ export default {
                 vueApp = Vue.createApp(Vue.defineAsyncComponent(() => loadModule("./play.vue", options)), props);
                 props["vueApp"] = vueApp;
                 vueApp.mount(document.body);
+                //console.log("ラウンジ props");
+                //console.log(props);
             });
 
             // エラー通知が来た

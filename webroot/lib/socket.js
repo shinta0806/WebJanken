@@ -13,6 +13,7 @@ const sqlite3 = require("sqlite3");
 const csc = require("../public/cs_constants");
 const dbc = require("./db_constants");
 const julianDay = require("./julian_day");
+const participantInfo = require("./participant_info");
 
 // グループを更新（更新の可能性があるカラムのみ）
 async function updateGroupAsync(db, groupRecord) {
@@ -56,6 +57,15 @@ async function selectGroupByUuidAsync(db, uuid) {
             }
         });
     });
+}
+
+// 指定されたソケット ID が属するグループを検索し、レコードを返す
+async function selectGroupBySocketIdAsync(db, socketId) {
+    // メンバー検索
+    const memberRecord = await selectMemberBySocketIdAsync(db, socketId);
+
+    // グループ検索
+    return await selectGroupByIdAsync(db, memberRecord[dbc.member.cGroup]);
 }
 
 // メンバーを登録
@@ -143,24 +153,33 @@ async function notifyNumParticipantsAsync(io, db, groupRecord) {
     io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.numParticipants, numParticipants);
 }
 
-// 参加者情報をグループ全員に通知
-async function notifyparticipantInfoAsync(db, groupRecord) {
+// 参加者情報群をグループ全員に通知
+async function notifyparticipantInfosToAllAsync(io, db, groupRecord) {
+    const jsonString = await participantInfosStringAsync(db, groupRecord);
+    io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.participantInfos, jsonString);
+}
 
-    let sentence = "select * from " + dbc.member.t
-        + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
-    await new Promise((resolve, reject) => {
+// 参加者情報群を一人に通知
+async function notifyparticipantInfosToOneAsync(socket, db, groupRecord) {
+    const jsonString = await participantInfosStringAsync(db, groupRecord);
+    socket.emit(csc.socketEvents.participantInfos, jsonString);
+}
+
+// 参加者情報群 JSON 文字列
+async function participantInfosStringAsync(db, groupRecord) {
+    const participantInfos = await new Promise((resolve, reject) => {
+        // 参加者情報を集める
+        const participantInfos = [];
+        const sentence = "select * from " + dbc.member.t
+            + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
         db.each(sentence, groupRecord[dbc.group.cId], dbc.member.status.playing, (err, res) => {
-            if (res) {
-                console.log(res);
-            } else {
-                console.log("!res");
-            }
+            const info = new participantInfo(res[dbc.member.cName], res[dbc.member.cPoint]);
+            participantInfos.push(info);
         }, () => {
-            console.log("complete");
-            resolve();
+            resolve(participantInfos);
         });
     });
-    console.log("notifyparticipantInfoAsync z");
+    return JSON.stringify(participantInfos);
 }
 
 // 新規グループ作成イベント
@@ -223,11 +242,8 @@ async function onJoinGroupRequestedAsync(io, socket, groupUuid) {
 async function onStartPlayRequestedAsync(io, socket) {
     const db = new sqlite3.Database(dbc.path);
 
-    // メンバー検索
-    const memberRecord = await selectMemberBySocketIdAsync(db, socket.id);
-
     // グループ検索
-    const groupRecord = await selectGroupByIdAsync(db, memberRecord[dbc.member.cGroup]);
+    const groupRecord = await selectGroupBySocketIdAsync(db, socket.id);
 
     // グループステータス更新
     if (groupRecord[dbc.group.cStatus] == dbc.group.status.playing) {
@@ -239,9 +255,19 @@ async function onStartPlayRequestedAsync(io, socket) {
 
     // プレイ開始を全員に通知
     io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.startPlay);
+}
 
-    // 参加者情報を全員に通知
-    await notifyparticipantInfoAsync(db, groupRecord);
+// プレイ開始準備完了イベント
+// 内容的にはプレイ開始イベントの末尾で送りたいものだが、それだとクライアント側のページ切替前に送ってしまい、
+// ページ切替後に反映されないため、クライアントからのページ切替を待ってから送るためのイベント
+async function onPlayReadyRequestedAsync(socket) {
+    const db = new sqlite3.Database(dbc.path);
+
+    // グループ検索
+    const groupRecord = await selectGroupBySocketIdAsync(db, socket.id);
+
+    // 参加者情報群を通知
+    await notifyparticipantInfosToOneAsync(socket, db, groupRecord);
 }
 
 // 切断イベント
@@ -297,6 +323,15 @@ function setSocket(httpServer) {
         socket.on(csc.socketEvents.startPlay, async () => {
             try {
                 await onStartPlayRequestedAsync(io, socket);
+            } catch (e) {
+                notifyException(socket, e);
+            }
+        });
+
+        // プレイ開始準備完了イベント
+        socket.on(csc.socketEvents.playReady, async () => {
+            try {
+                await onPlayReadyRequestedAsync(socket);
             } catch (e) {
                 notifyException(socket, e);
             }
