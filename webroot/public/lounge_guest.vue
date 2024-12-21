@@ -59,7 +59,7 @@ export default {
 
         // 人数通知が来た
         this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
-            console.log(this.vueApp);
+            //console.log(this.vueApp);
             this.numParticipants = numParticipants;
         });
 
