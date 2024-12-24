@@ -90,7 +90,7 @@ async function insertMemberAsync(db, groupId, socketId) {
             + "(" + dbc.member.cGroup + ", " + dbc.member.cSerial + ", " + dbc.member.cName + ", "
             + dbc.member.cStatus + ", " + dbc.member.cSocket + ", " + dbc.member.cTactics + ", " + dbc.member.cPoint + ") "
             + "values(?, ?, ?, ?, ?, ?, ?)";
-        db.run(sentence, groupId, serial, name, dbc.member.status.playing, socketId, dbc.member.tactics.thinking, 0,
+        db.run(sentence, groupId, serial, name, dbc.member.status.playing, socketId, csc.tactics.thinking, 0,
             (err) => {
                 if (err) {
                     reject(new Error("メンバー登録できませんでした：" + groupId + ", " + name));
@@ -270,6 +270,13 @@ async function onPlayReadyRequestedAsync(socket) {
     await notifyparticipantInfosToOneAsync(socket, db, groupRecord);
 }
 
+// 手選択イベント
+async function onSelectTacticsRequestedAsync(socket, tactics) {
+    if (!tactics) {
+        throw new Error("手が選択されていません。");
+    }
+}
+
 // 切断イベント
 async function onDisconnectedAsync(io, socket) {
     const db = new sqlite3.Database(dbc.path);
@@ -332,6 +339,15 @@ function setSocket(httpServer) {
         socket.on(csc.socketEvents.playReady, async () => {
             try {
                 await onPlayReadyRequestedAsync(socket);
+            } catch (e) {
+                notifyException(socket, e);
+            }
+        });
+
+        // 手選択イベント
+        socket.on(csc.socketEvents.selectTactics, async (tactics) => {
+            try {
+                await onSelectTacticsRequestedAsync(socket, tactics);
             } catch (e) {
                 notifyException(socket, e);
             }

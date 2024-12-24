@@ -34,6 +34,9 @@ class socketEvents {
     // 参加者情報群
     participantInfos = "participantInfos";
 
+    // 手を出す
+    selectTactics = "selectTactics";
+
     // エラー発生
     errorMessage = "errorMessage";
 }
@@ -48,6 +51,24 @@ class urlParams {
 }
 
 // ====================================================================
+// 手
+// ====================================================================
+
+class tactics {
+    // 思考中
+    thinking = 0;
+
+    // グー
+    gu = 1;
+
+    // チョキ
+    choki = 2;
+
+    // パー
+    pa = 3;
+}
+
+// ====================================================================
 // 全体
 // ====================================================================
 
@@ -57,6 +78,9 @@ class csConstants {
 
     // URL パラメーター
     static params = new urlParams();
+
+    // 手
+    static tactics = new tactics();
 }
 
 try {

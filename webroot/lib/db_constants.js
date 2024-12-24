@@ -55,9 +55,6 @@ class tableMember {
 
     // ステータス
     status = new memberStatus();
-
-    // 出した手
-    tactics = new memberTactics();
 }
 
 class memberStatus {
@@ -66,20 +63,6 @@ class memberStatus {
 
     // 棄権（切断）
     withdrew = 1;
-}
-
-class memberTactics {
-    // 思考中
-    thinking = 0;
-
-    // グー
-    gu = 1;
-
-    // チョキ
-    choki = 2;
-
-    // パー
-    pa = 3;
 }
 
 // ====================================================================

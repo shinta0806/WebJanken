@@ -8,8 +8,26 @@
     <p>プレイ</p>
     <participantPanel v-for="participantInfo in participantInfos" :participantInfo="participantInfo"></participantPanel>
     <p>次は何を出しますか？</p>
+    <p>
+        <button class="tacticsButton" @click="onTacticsGuClicked()" :disabled="isTacticsButtonDisabled">
+            <img class="tacticsImg" src="tactics_gu.png" />
+        </button>
+
+    </p>
+    <p>{{ statusMessage }}</p>
     <p>{{ errorMessage }}</p>
 </template>
+
+<style>
+.tacticsButton {
+    width: 100px;
+    height: 100px;
+}
+
+.tacticsImg {
+    height: 90%;
+}
+</style>
 
 <script>
 import participantPanel from './participant_panel.vue'
@@ -38,6 +56,12 @@ export default {
             // 参加者情報群
             participantInfos: null,
 
+            // 手ボタン無効化
+            isTacticsButtonDisabled: false,
+
+            // ステータスメッセージ
+            statusMessage: null,
+
             // エラーメッセージ
             errorMessage: null,
         };
@@ -48,6 +72,21 @@ export default {
     // ====================================================================
 
     methods: {
+        // グーを出す
+        onTacticsGuClicked() {
+            // ToDo: button.@click の引数に csConstants.tactics.gu を記述すると認識されないのでワンクッション置いている
+            this.sendTactics(csConstants.tactics.gu);
+        },
+
+        // 手をサーバーに送信
+        sendTactics(tactics) {
+            // UI 処理
+            this.isTacticsButtonDisabled = true;
+            this.statusMessage = "他の参加者が手を出すのを待っています...";
+
+            // 送信
+            this.socket.emit(csConstants.socketEvents.selectTactics, tactics);
+        },
     },
 
     // ====================================================================
@@ -70,5 +109,3 @@ export default {
     },
 }
 </script>
-
-<style></style>
