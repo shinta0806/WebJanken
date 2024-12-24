@@ -6,7 +6,7 @@
 
 <template>
     <div>
-        <p>ラウンジ（ホスト）</p>
+        <p id="tit">ラウンジ（ホスト）</p>
         <p>グループを作ります。一緒にプレイしたい人に、以下の URL にアクセスしてもらってください。</p>
         <div id="showQr"></div>
         <p>{{ invitationUrl }} <button @click="onCopyClicked">コピー</button></p>
@@ -15,7 +15,11 @@
     </div>
 </template>
 
-<style></style>
+<style>
+p#tit {
+    background-color: skyblue;
+}
+</style>
 
 <script>
 import loungeBase from "./lounge_base.vue";

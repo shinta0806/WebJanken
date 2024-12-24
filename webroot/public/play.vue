@@ -7,6 +7,7 @@
 <template>
     <p>プレイ</p>
     <participantPanel v-for="participantInfo in participantInfos" :participantInfo="participantInfo"></participantPanel>
+    <p>次は何を出しますか？</p>
     <p>{{ errorMessage }}</p>
 </template>
 

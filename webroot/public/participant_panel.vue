@@ -5,14 +5,18 @@
 // ============================================================================
 
 <template>
-    <span>
+    <span id="root">
         <span>{{ participantInfo.name }}</span>
         <span>：</span>
         <span>{{ participantInfo.point }} 点</span>
     </span>
 </template>
 
-<style></style>
+<style>
+span#root {
+    margin: 0 2em 0 0;
+}
+</style>
 
 <script>
 export default {
