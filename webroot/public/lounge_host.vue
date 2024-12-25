@@ -95,7 +95,7 @@ export default {
         this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
             //console.log("host 人数通知受領");
             this.numParticipants = numParticipants;
-            this.isPlayButtonDisabled = numParticipants == 1;
+            this.isPlayButtonDisabled = numParticipants === 1;
         });
 
         // ホスト・ゲスト共通イベント

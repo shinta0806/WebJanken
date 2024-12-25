@@ -78,7 +78,7 @@ async function insertMemberAsync(db, groupId, socketId) {
 
     // 名前の決定
     let name;
-    if (serial == 0) {
+    if (serial === 0) {
         name = "Host";
     } else {
         name = "Guest " + serial;
@@ -106,15 +106,16 @@ async function insertMemberAsync(db, groupId, socketId) {
 async function updateMemberAsync(db, memberRecord) {
     await new Promise((resolve, reject) => {
         const sentence = "update " + dbc.member.t + " set "
-            + dbc.member.cName + " = ?, " + dbc.member.cStatus + " = ? "
+            + dbc.member.cName + " = ?, " + dbc.member.cStatus + " = ?, " + dbc.member.cTactics + " = ?, " + dbc.member.cPoint + " = ? "
             + "where " + dbc.member.cId + " = ?";
-        db.run(sentence, memberRecord[dbc.member.cName], memberRecord[dbc.member.cStatus], memberRecord[dbc.member.cId], (err) => {
-            if (err) {
-                reject(new Error("メンバー更新できませんでした：" + memberRecord[dbc.member.cGroup] + ", " + memberRecord[dbc.member.cName]));
-            } else {
-                resolve();
-            }
-        });
+        db.run(sentence, memberRecord[dbc.member.cName], memberRecord[dbc.member.cStatus], memberRecord[dbc.member.cId],
+            memberRecord[dbc.member.cTactics], memberRecord[dbc.member.cPoint], (err) => {
+                if (err) {
+                    reject(new Error("メンバー更新できませんでした：" + memberRecord[dbc.member.cGroup] + ", " + memberRecord[dbc.member.cName]));
+                } else {
+                    resolve();
+                }
+            });
     });
 }
 
@@ -246,7 +247,7 @@ async function onStartPlayRequestedAsync(io, socket) {
     const groupRecord = await selectGroupBySocketIdAsync(db, socket.id);
 
     // グループステータス更新
-    if (groupRecord[dbc.group.cStatus] == dbc.group.status.playing) {
+    if (groupRecord[dbc.group.cStatus] !== dbc.group.status.hiring) {
         // 多重にプレイ開始を受領
         throw new Error("既にプレイ開始されています。");
     }
@@ -275,6 +276,29 @@ async function onSelectTacticsRequestedAsync(socket, tactics) {
     if (!tactics) {
         throw new Error("手が選択されていません。");
     }
+
+    // tactics を整数で受信するとは限らないので、あくまでも簡易的なチェック
+    if (tactics < csc.tactics.gu || tactics > csc.tactics.pa) {
+        throw new Error("手が不正です。");
+    }
+
+    const db = new sqlite3.Database(dbc.path);
+
+    // グループ検索
+    const groupRecord = await selectGroupBySocketIdAsync(db, socket.id);
+    if (groupRecord[dbc.group.cStatus] !== dbc.group.status.playing) {
+        throw new Error("プレイ中ではないのに手が選択されました。");
+    }
+
+    // 手を記録
+    const memberRecord = await selectMemberBySocketIdAsync(db, socket.id);
+    if (memberRecord[dbc.member.cTactics] !== csc.tactics.thinking) {
+        throw new Error("既に手は選択済です。");
+    }
+    memberRecord[dbc.member.cTactics] = tactics;
+    await updateMemberAsync(db, memberRecord);
+
+    // 全員の手が出そろったか？
 }
 
 // 切断イベント

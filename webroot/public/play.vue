@@ -18,7 +18,6 @@
         <button class="tacticsButton" @click="onTacticsPaClicked()" :disabled="isTacticsButtonDisabled">
             <img class="tacticsImg" src="tactics_pa.png" />
         </button>
-
     </p>
     <p>{{ statusMessage }}</p>
     <p>{{ errorMessage }}</p>
