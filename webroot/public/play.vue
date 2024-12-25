@@ -12,6 +12,12 @@
         <button class="tacticsButton" @click="onTacticsGuClicked()" :disabled="isTacticsButtonDisabled">
             <img class="tacticsImg" src="tactics_gu.png" />
         </button>
+        <button class="tacticsButton" @click="onTacticsChokiClicked()" :disabled="isTacticsButtonDisabled">
+            <img class="tacticsImg" src="tactics_choki.png" />
+        </button>
+        <button class="tacticsButton" @click="onTacticsPaClicked()" :disabled="isTacticsButtonDisabled">
+            <img class="tacticsImg" src="tactics_pa.png" />
+        </button>
 
     </p>
     <p>{{ statusMessage }}</p>
@@ -22,6 +28,7 @@
 .tacticsButton {
     width: 100px;
     height: 100px;
+    margin-right: 20px;
 }
 
 .tacticsImg {
@@ -76,6 +83,16 @@ export default {
         onTacticsGuClicked() {
             // ToDo: button.@click の引数に csConstants.tactics.gu を記述すると認識されないのでワンクッション置いている
             this.sendTactics(csConstants.tactics.gu);
+        },
+
+        // チョキを出す
+        onTacticsChokiClicked() {
+            this.sendTactics(csConstants.tactics.choki);
+        },
+
+        // パーを出す
+        onTacticsPaClicked() {
+            this.sendTactics(csConstants.tactics.pa);
         },
 
         // 手をサーバーに送信
