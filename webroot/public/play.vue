@@ -7,6 +7,7 @@
 <template>
     <p>プレイ</p>
     <participantPanel v-for="participantInfo in participantInfos" :participantInfo="participantInfo"></participantPanel>
+    <p>{{ judgementMessage }}</p>
     <p>次は何を出しますか？</p>
     <p>
         <button :class="guClasses" @click="onTacticsGuClicked()" :disabled="isTacticsButtonDisabled">
@@ -66,10 +67,13 @@ export default {
             // 参加者情報群
             participantInfos: null,
 
+            // 勝敗メッセージ
+            judgementMessage: null,
+
             // 手ボタンのスタイルクラス
-            guClasses: ["tacticsButton"],
-            chokiClasses: ["tacticsButton"],
-            paClasses: ["tacticsButton"],
+            guClasses: null,
+            chokiClasses: null,
+            paClasses: null,
 
             // 手ボタン無効化
             isTacticsButtonDisabled: false,
@@ -87,6 +91,14 @@ export default {
     // ====================================================================
 
     methods: {
+        // 手ボタン初期化
+        clearTactics() {
+            this.guClasses = ["tacticsButton"];
+            this.chokiClasses = ["tacticsButton"];
+            this.paClasses = ["tacticsButton"];
+            this.isTacticsButtonDisabled = false;
+        },
+
         // グーを出す
         onTacticsGuClicked() {
             // ToDo: button.@click の引数に csConstants.tactics.gu を記述すると認識されないのでワンクッション置いている
@@ -120,9 +132,29 @@ export default {
     // ====================================================================
 
     beforeMount() {
+        // 手ボタン初期化
+        this.clearTactics();
+
         // 参加者情報群が来た
         this.socket.on(csConstants.socketEvents.participantInfos, (participantInfosString) => {
             this.participantInfos = JSON.parse(participantInfosString);
+        });
+
+        // 勝敗が来た
+        this.socket.on(csConstants.socketEvents.judgement, (judgement) => {
+            switch (judgement) {
+                case csConstants.judgement.win:
+                    this.judgementMessage = "勝ち！　勝利点 +1";
+                    break;
+                case csConstants.judgement.lose:
+                    this.judgementMessage = "負け...";
+                    break;
+                case csConstants.judgement.draw:
+                    this.judgementMessage = "あいこ";
+                    break;
+            }
+            this.clearTactics();
+            this.statusMessage = null;
         });
 
         // エラー通知が来た

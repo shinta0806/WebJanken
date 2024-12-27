@@ -108,8 +108,10 @@ async function updateMemberAsync(db, memberRecord) {
         const sentence = "update " + dbc.member.t + " set "
             + dbc.member.cName + " = ?, " + dbc.member.cStatus + " = ?, " + dbc.member.cTactics + " = ?, " + dbc.member.cPoint + " = ? "
             + "where " + dbc.member.cId + " = ?";
-        db.run(sentence, memberRecord[dbc.member.cName], memberRecord[dbc.member.cStatus], memberRecord[dbc.member.cId],
-            memberRecord[dbc.member.cTactics], memberRecord[dbc.member.cPoint], (err) => {
+        //console.log(sentence);
+        //console.log(memberRecord);
+        db.run(sentence, memberRecord[dbc.member.cName], memberRecord[dbc.member.cStatus], memberRecord[dbc.member.cTactics],
+            memberRecord[dbc.member.cPoint], memberRecord[dbc.member.cId], (err) => {
                 if (err) {
                     reject(new Error("メンバー更新できませんでした：" + memberRecord[dbc.member.cGroup] + ", " + memberRecord[dbc.member.cName]));
                 } else {
@@ -142,7 +144,23 @@ async function countMemberAsync(db, groupId) {
             if (res) {
                 resolve(res["count(*)"]);
             } else {
-                reject(new Error("指定されたグループは存在しません：" + uuid));
+                reject(new Error("指定されたグループは存在しません：" + groupId));
+            }
+        });
+    });
+}
+
+// 手の数を数える
+async function countTacticsAsync(db, groupId, tactics) {
+    return await new Promise((resolve, reject) => {
+        const sentence = "select count(*) from " + dbc.member.t
+            + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ? and "
+            + dbc.member.cTactics + " = ?";
+        db.get(sentence, groupId, dbc.member.status.playing, tactics, (err, res) => {
+            if (res) {
+                resolve(res["count(*)"]);
+            } else {
+                reject(new Error("指定されたグループは存在しません：" + groupId));
             }
         });
     });
@@ -181,6 +199,53 @@ async function participantInfosStringAsync(db, groupRecord) {
         });
     });
     return JSON.stringify(participantInfos);
+}
+
+// 全員に対戦結果を通知
+async function notifyResultAsync(io, db, groupId) {
+    const memberRecords = await new Promise((resolve, reject) => {
+        const sentence = "select * from " + dbc.member.t
+            + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
+        db.all(sentence, groupId, dbc.member.status.playing, (err, res) => {
+            resolve(res);
+        });
+    });
+
+    // 手の数を数える
+    const numGu = await countTacticsAsync(db, groupId, csc.tactics.gu);
+    const numChoki = await countTacticsAsync(db, groupId, csc.tactics.choki);
+    const numPa = await countTacticsAsync(db, groupId, csc.tactics.pa);
+    if (numGu + numChoki + numPa <= 1) {
+        throw new Error("参加者が不足しています。");
+    }
+
+    if (numGu > 0 && numChoki > 0 && numPa > 0
+        || numGu === 0 && numChoki === 0
+        || numChoki === 0 && numPa === 0
+        || numPa === 0 && numGu === 0) {
+        // あいこ（勝利点は変動しないので結果のみ通知）
+        memberRecords.forEach(memberRecord => {
+            io.to(memberRecord[dbc.member.cSocket]).emit(csc.socketEvents.judgement, csc.judgement.draw);
+        });
+    } else {
+        // 勝負あり
+    }
+
+
+}
+
+// 参加者全員の手を初期化
+async function clearSelectionAsync(db, groupId) {
+    await new Promise((resolve, reject) => {
+        const sentence = "select * from " + dbc.member.t
+            + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
+        db.each(sentence, groupId, dbc.member.status.playing, async (err, res) => {
+            res[dbc.member.cTactics] = csc.tactics.thinking;
+            await updateMemberAsync(db, res);
+        }, () => {
+            resolve();
+        });
+    });
 }
 
 // 新規グループ作成イベント
@@ -272,7 +337,7 @@ async function onPlayReadyRequestedAsync(socket) {
 }
 
 // 手選択イベント
-async function onSelectTacticsRequestedAsync(socket, tactics) {
+async function onSelectTacticsRequestedAsync(io, socket, tactics) {
     if (!tactics) {
         throw new Error("手が選択されていません。");
     }
@@ -295,10 +360,22 @@ async function onSelectTacticsRequestedAsync(socket, tactics) {
     if (memberRecord[dbc.member.cTactics] !== csc.tactics.thinking) {
         throw new Error("既に手は選択済です。");
     }
+    //console.log(tactics);
     memberRecord[dbc.member.cTactics] = tactics;
     await updateMemberAsync(db, memberRecord);
 
     // 全員の手が出そろったか？
+    const numThinking = await countTacticsAsync(db, groupRecord[dbc.group.cId], csc.tactics.thinking);
+    //console.log(numThinking);
+    if (numThinking > 0) {
+        return;
+    }
+
+    // 全員に結果通知
+    await notifyResultAsync(io, db, groupRecord[dbc.group.cId]);
+
+    // 手を初期化
+    await clearSelectionAsync(db, groupRecord[dbc.group.cId]);
 }
 
 // 切断イベント
@@ -371,7 +448,7 @@ function setSocket(httpServer) {
         // 手選択イベント
         socket.on(csc.socketEvents.selectTactics, async (tactics) => {
             try {
-                await onSelectTacticsRequestedAsync(socket, tactics);
+                await onSelectTacticsRequestedAsync(io, socket, tactics);
             } catch (e) {
                 notifyException(socket, e);
             }

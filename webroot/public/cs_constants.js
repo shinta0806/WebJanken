@@ -37,6 +37,9 @@ class socketEvents {
     // 手を出す
     selectTactics = "selectTactics";
 
+    // 勝敗
+    judgement = "judgement";
+
     // エラー発生
     errorMessage = "errorMessage";
 }
@@ -69,6 +72,21 @@ class tactics {
 }
 
 // ====================================================================
+// 勝敗
+// ====================================================================
+
+class judgement {
+    // 勝ち
+    win = 1;
+
+    // 負け
+    lose = -1;
+
+    // あいこ
+    draw = 0;
+}
+
+// ====================================================================
 // 全体
 // ====================================================================
 
@@ -81,6 +99,9 @@ class csConstants {
 
     // 手
     static tactics = new tactics();
+
+    // 勝敗
+    static judgement = new judgement();
 }
 
 try {
