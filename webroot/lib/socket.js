@@ -225,9 +225,9 @@ async function notifyResultAsync(io, db, groupRecord) {
         || numChoki === 0 && numPa === 0
         || numPa === 0 && numGu === 0) {
         // あいこ（勝利点は変動しないので結果のみ通知）
-        memberRecords.forEach(memberRecord => {
+        for (const memberRecord of memberRecords) {
             io.to(memberRecord[dbc.member.cSocket]).emit(csc.socketEvents.judgement, csc.judgement.draw);
-        });
+        }
     } else {
         //console.log("notifyResultAsync() 勝敗決定");
         let win;
@@ -242,16 +242,18 @@ async function notifyResultAsync(io, db, groupRecord) {
             win = csc.tactics.gu;
         }
 
-        // 結果通知
-        memberRecords.forEach(memberRecord => {
+        // 勝利点更新と結果通知
+        for (const memberRecord of memberRecords) {
             if (memberRecord[dbc.member.cTactics] === win) {
                 //console.log("notifyResultAsync() 勝ち");
+                memberRecord[dbc.member.cPoint] += 1;
+                await updateMemberAsync(db, memberRecord);
                 io.to(memberRecord[dbc.member.cSocket]).emit(csc.socketEvents.judgement, csc.judgement.win);
             } else {
                 //console.log("notifyResultAsync() 負け");
                 io.to(memberRecord[dbc.member.cSocket]).emit(csc.socketEvents.judgement, csc.judgement.lose);
             }
-        });
+        }
 
         // 勝利点通知
         notifyparticipantInfosToAllAsync(io, db, groupRecord);
