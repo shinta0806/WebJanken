@@ -202,7 +202,8 @@ async function participantInfosStringAsync(db, groupRecord) {
 }
 
 // 全員に対戦結果を通知
-async function notifyResultAsync(io, db, groupId) {
+async function notifyResultAsync(io, db, groupRecord) {
+    const groupId = groupRecord[dbc.group.cId];
     const memberRecords = await new Promise((resolve, reject) => {
         const sentence = "select * from " + dbc.member.t
             + " where " + dbc.member.cGroup + " = ? and " + dbc.member.cStatus + " = ?";
@@ -228,10 +229,33 @@ async function notifyResultAsync(io, db, groupId) {
             io.to(memberRecord[dbc.member.cSocket]).emit(csc.socketEvents.judgement, csc.judgement.draw);
         });
     } else {
-        // 勝負あり
+        //console.log("notifyResultAsync() 勝敗決定");
+        let win;
+        if (numGu === 0) {
+            // チョキが勝ち
+            win = csc.tactics.choki;
+        } else if (numChoki === 0) {
+            // パーが勝ち
+            win = csc.tactics.pa;
+        } else {
+            // グーが勝ち
+            win = csc.tactics.gu;
+        }
+
+        // 結果通知
+        memberRecords.forEach(memberRecord => {
+            if (memberRecord[dbc.member.cTactics] === win) {
+                //console.log("notifyResultAsync() 勝ち");
+                io.to(memberRecord[dbc.member.cSocket]).emit(csc.socketEvents.judgement, csc.judgement.win);
+            } else {
+                //console.log("notifyResultAsync() 負け");
+                io.to(memberRecord[dbc.member.cSocket]).emit(csc.socketEvents.judgement, csc.judgement.lose);
+            }
+        });
+
+        // 勝利点通知
+        notifyparticipantInfosToAllAsync(io, db, groupRecord);
     }
-
-
 }
 
 // 参加者全員の手を初期化
@@ -372,7 +396,7 @@ async function onSelectTacticsRequestedAsync(io, socket, tactics) {
     }
 
     // 全員に結果通知
-    await notifyResultAsync(io, db, groupRecord[dbc.group.cId]);
+    await notifyResultAsync(io, db, groupRecord);
 
     // 手を初期化
     await clearSelectionAsync(db, groupRecord[dbc.group.cId]);
