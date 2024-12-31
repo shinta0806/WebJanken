@@ -6,7 +6,9 @@
 
 <template>
     <p :class="playerClass">プレイ</p>
-    <participantPanel v-for="participantInfo in participantInfos" :participantInfo="participantInfo"></participantPanel>
+    <participantPanel v-for="participantInfo in participantInfos" :participantInfo="participantInfo"
+        :playerName="playerName">
+    </participantPanel>
     <p>{{ judgementMessage }}</p>
     <p>次は何を出しますか？</p>
     <p>
@@ -74,6 +76,9 @@ export default {
         return {
             // 参加者表示用のスタイルクラス
             playerClass: null,
+
+            // 参加者名
+            playerName: null,
 
             // 参加者情報群
             participantInfos: null,
@@ -148,6 +153,7 @@ export default {
 
         // 参加者名が来た
         this.socket.on(csConstants.socketEvents.playerName, (name) => {
+            this.playerName = name;
             if (name === "Host") {
                 this.playerClass = "playerHost";
             } else {
