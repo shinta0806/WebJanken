@@ -38,7 +38,7 @@ const props = defineProps(["groupConst", "vueApp"]);
 // --------------------------------------------------------------------
 
 // グループ UUID
-const groupUuid = ref(props.groupConst);
+const groupUuid = ref(null);
 
 // 参加人数
 const numParticipants = ref(1);
@@ -62,6 +62,8 @@ let socket = null;
 // ====================================================================
 
 onBeforeMount(() => {
+    groupUuid.value = props.groupConst;
+
     // ソケットインスタンス作成時に接続しに行く
     socket = io();
 
@@ -117,5 +119,4 @@ function setSocketOnCommon() {
         errorMessage.value = message;
     });
 }
-
 </script>

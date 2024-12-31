@@ -34,7 +34,7 @@ function loadModuleOptions() {
     }
 }
 
-async function client() {
+function client() {
     const options = loadModuleOptions();
     const { loadModule } = window["vue3-sfc-loader"];
 

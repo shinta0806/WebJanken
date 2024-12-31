@@ -8,3 +8,4 @@
 2024/12/31 (Tue) (1.02)   participant_panel コンポーネントが自分の色を色分けするようにした。
 2024/12/31 (Tue) (1.03)   participant_panel コンポーネントを Composition API に変更。
 2024/12/31 (Tue) (1.04)   lounge_guest コンポーネントを Composition API に変更。
+2024/12/31 (Tue) (1.05)   lounge_host コンポーネントを Composition API に変更。
