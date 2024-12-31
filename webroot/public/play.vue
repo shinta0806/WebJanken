@@ -164,8 +164,6 @@ export default {
         // 参加者情報群が来た
         this.socket.on(csConstants.socketEvents.participantInfos, (participantInfosString) => {
             this.participantInfos = JSON.parse(participantInfosString);
-            //console.log("participantInfos 到着");
-            //console.log(this.participantInfos);
         });
 
         // 勝敗が来た

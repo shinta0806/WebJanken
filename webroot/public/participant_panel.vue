@@ -69,7 +69,6 @@ export default {
                 className = "playerGuest";
             }
             if (!this.rootClasses.includes(className)) {
-                console.log("updateRootClasses() クラス追加");
                 this.rootClasses.push(className);
             }
         }
@@ -88,7 +87,6 @@ export default {
         // this.playerName よりも参加者情報群が先に届き、本コンポーネント構築時には this.playerName が
         // 設定されていないことがあり得るかもしれないので、念のため beforeUpdate() も捕捉する
         // なお、beforeUpdate() の before は「DOM 更新の前」であり、リアクティブの内容は更新済
-        console.log("beforeUpdate()");
         this.updateRootClasses();
     },
 }
