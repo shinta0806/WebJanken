@@ -6,7 +6,7 @@
 
 <template>
     <div>
-        <p>ラウンジ（ゲスト）</p>
+        <p id="loungeTitle">ラウンジ（ゲスト）</p>
         <p>{{ groupUuid }}</p>
         <p>ホストが参加者を募集中です。現在の参加者：{{ numParticipants }}</p>
         <p>ホストがプレイ開始するのを待っています...</p>
@@ -14,7 +14,11 @@
     </div>
 </template>
 
-<style></style>
+<style>
+p#loungeTitle {
+    background-color: #ddaaff;
+}
+</style>
 
 <script>
 import loungeBase from "./lounge_base.vue";

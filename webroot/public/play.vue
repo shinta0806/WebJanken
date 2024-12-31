@@ -5,7 +5,7 @@
 // ============================================================================
 
 <template>
-    <p>プレイ</p>
+    <p :class="playerClass">プレイ</p>
     <participantPanel v-for="participantInfo in participantInfos" :participantInfo="participantInfo"></participantPanel>
     <p>{{ judgementMessage }}</p>
     <p>次は何を出しますか？</p>
@@ -25,6 +25,14 @@
 </template>
 
 <style>
+.playerHost {
+    background-color: #99ffff;
+}
+
+.playerGuest {
+    background-color: #ddaaff;
+}
+
 .tacticsButton {
     width: 100px;
     height: 100px;
@@ -32,7 +40,7 @@
 }
 
 .selectedButton {
-    background-color: #CCFFCC;
+    background-color: #ccffcc;
 }
 
 .tacticsImg {
@@ -64,6 +72,9 @@ export default {
 
     data() {
         return {
+            // 参加者表示用のスタイルクラス
+            playerClass: null,
+
             // 参加者情報群
             participantInfos: null,
 
@@ -135,11 +146,20 @@ export default {
         // 手ボタン初期化
         this.clearTactics();
 
+        // 参加者名が来た
+        this.socket.on(csConstants.socketEvents.playerName, (name) => {
+            if (name === "Host") {
+                this.playerClass = "playerHost";
+            } else {
+                this.playerClass = "playerGuest";
+            }
+        });
+
         // 参加者情報群が来た
         this.socket.on(csConstants.socketEvents.participantInfos, (participantInfosString) => {
             this.participantInfos = JSON.parse(participantInfosString);
-            console.log("participantInfos 到着");
-            console.log(this.participantInfos);
+            //console.log("participantInfos 到着");
+            //console.log(this.participantInfos);
         });
 
         // 勝敗が来た

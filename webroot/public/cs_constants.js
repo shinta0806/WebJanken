@@ -31,6 +31,9 @@ class socketEvents {
     // プレイ開始準備完了
     playReady = "playReady";
 
+    // 参加者名
+    playerName = "playerName";
+
     // 参加者情報群
     participantInfos = "participantInfos";
 

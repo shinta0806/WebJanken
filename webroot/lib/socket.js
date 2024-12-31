@@ -172,14 +172,20 @@ async function notifyNumParticipantsAsync(io, db, groupRecord) {
     io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.numParticipants, numParticipants);
 }
 
+// 参加者名を通知
+async function notifyPlayerNameAsync(socket, db) {
+    const memberRecord = await selectMemberBySocketIdAsync(db, socket.id);
+    socket.emit(csc.socketEvents.playerName, memberRecord[dbc.member.cName]);
+}
+
 // 参加者情報群をグループ全員に通知
-async function notifyparticipantInfosToAllAsync(io, db, groupRecord) {
+async function notifyParticipantInfosToAllAsync(io, db, groupRecord) {
     const jsonString = await participantInfosStringAsync(db, groupRecord);
     io.to(groupRecord[dbc.group.cUuid]).emit(csc.socketEvents.participantInfos, jsonString);
 }
 
 // 参加者情報群を一人に通知
-async function notifyparticipantInfosToOneAsync(socket, db, groupRecord) {
+async function notifyParticipantInfosToOneAsync(socket, db, groupRecord) {
     const jsonString = await participantInfosStringAsync(db, groupRecord);
     socket.emit(csc.socketEvents.participantInfos, jsonString);
 }
@@ -256,7 +262,7 @@ async function notifyResultAsync(io, db, groupRecord) {
         }
 
         // 勝利点通知
-        notifyparticipantInfosToAllAsync(io, db, groupRecord);
+        notifyParticipantInfosToAllAsync(io, db, groupRecord);
     }
 }
 
@@ -358,8 +364,11 @@ async function onPlayReadyRequestedAsync(socket) {
     // グループ検索
     const groupRecord = await selectGroupBySocketIdAsync(db, socket.id);
 
+    // 参加者名を通知
+    await notifyPlayerNameAsync(socket, db);
+
     // 参加者情報群を通知
-    await notifyparticipantInfosToOneAsync(socket, db, groupRecord);
+    await notifyParticipantInfosToOneAsync(socket, db, groupRecord);
 }
 
 // 手選択イベント

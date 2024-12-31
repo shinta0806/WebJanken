@@ -6,7 +6,7 @@
 
 <template>
     <div>
-        <p id="tit">ラウンジ（ホスト）</p>
+        <p id="loungeTitle">ラウンジ（ホスト）</p>
         <p>グループを作ります。一緒にプレイしたい人に、以下の URL にアクセスしてもらってください。</p>
         <div id="showQr"></div>
         <p>{{ invitationUrl }} <button @click="onCopyClicked">コピー</button></p>
@@ -16,8 +16,8 @@
 </template>
 
 <style>
-p#tit {
-    background-color: skyblue;
+p#loungeTitle {
+    background-color: #99ffff;
 }
 </style>
 
