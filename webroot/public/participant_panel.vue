@@ -26,70 +26,65 @@
 }
 </style>
 
-<script>
-export default {
-    // ====================================================================
-    // 構築時受領
-    // ====================================================================
+<script setup>
+import { ref, onBeforeMount, onBeforeUpdate } from "vue";
 
-    props: ["participantInfo", "playerName"],
+// ====================================================================
+// 構築時受領
+// ====================================================================
 
-    // ====================================================================
-    // リアクティブ
-    // ====================================================================
+const props = defineProps(["participantInfo", "playerName"]);
 
-    data() {
-        return {
-            // ルート要素のスタイルクラス
-            rootClasses: ["rootBase"],
-        };
-    },
+// ====================================================================
+// リアクティブ
+// ====================================================================
 
-    // ====================================================================
-    // 関数
-    // ====================================================================
+// ルート要素のスタイルクラス
+const rootClasses = ref(["rootBase"]);
 
-    methods: {
-        // ルート要素のスタイルクラスを更新
-        updateRootClasses() {
-            if (!this.playerName) {
-                return;
-            }
+// ====================================================================
+// イベントハンドラー
+// ====================================================================
 
-            // 参加者名が参加者情報と異なる場合は色づけしない
-            if (this.playerName !== this.participantInfo.name) {
-                return;
-            }
+onBeforeMount(() => {
+    updateRootClasses();
+});
 
-            // 役割に応じた色づけをする
-            let className;
-            if (this.playerName === "Host") {
-                className = "playerHost";
-            } else {
-                className = "playerGuest";
-            }
-            if (!this.rootClasses.includes(className)) {
-                console.log("updateRootClasses() クラス追加");
-                this.rootClasses.push(className);
-            }
-        }
-    },
+onBeforeUpdate(() => {
+    // 通常は beforeMount() の段階で this.playerName が設定されているが、ネットワークの状態によっては
+    // this.playerName よりも参加者情報群が先に届き、本コンポーネント構築時には this.playerName が
+    // 設定されていないことがあり得るかもしれないので、念のため beforeUpdate() も捕捉する
+    // なお、beforeUpdate() の before は「DOM 更新の前」であり、リアクティブの内容は更新済
+    console.log("beforeUpdate()");
+    updateRootClasses();
+});
 
-    // ====================================================================
-    // イベントハンドラー
-    // ====================================================================
+// ====================================================================
+// 関数
+// ====================================================================
 
-    beforeMount() {
-        this.updateRootClasses();
-    },
+// ルート要素のスタイルクラスを更新
+function updateRootClasses() {
+    if (!props.playerName) {
+        return;
+    }
 
-    beforeUpdate() {
-        // 通常は beforeMount() の段階で this.playerName が設定されているが、ネットワークの状態によっては
-        // this.playerName よりも参加者情報群が先に届き、本コンポーネント構築時には this.playerName が
-        // 設定されていないことがあり得るかもしれないので、念のため beforeUpdate() も捕捉する
-        // なお、beforeUpdate() の before は「DOM 更新の前」であり、リアクティブの内容は更新済
-        console.log("beforeUpdate()");
-        this.updateRootClasses();
-    },
+    // 参加者名が参加者情報と異なる場合は色づけしない
+    if (props.playerName !== props.participantInfo.name) {
+        return;
+    }
+
+    // 役割に応じた色づけをする
+    let className;
+    if (props.playerName === "Host") {
+        className = "playerHost";
+    } else {
+        className = "playerGuest";
+    }
+    if (!rootClasses.value.includes(className)) {
+        console.log("updateRootClasses() クラス追加");
+        rootClasses.value.push(className);
+    }
 }
+
 </script>
