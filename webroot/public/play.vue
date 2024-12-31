@@ -50,148 +50,136 @@
 }
 </style>
 
-<script>
-import participantPanel from './participant_panel.vue'
+<script setup>
+import { ref, onBeforeMount } from "vue";
+import { participantPanel } from "./participant_panel.vue";
 
-export default {
-    // ====================================================================
-    // 構築時受領
-    // ====================================================================
+// ====================================================================
+// 構築時受領
+// ====================================================================
 
-    props: ["socket", "vueApp"],
+const props = defineProps(["socket", "vueApp"]);
 
-    // ====================================================================
-    // カスタムコンポーネント
-    // ====================================================================
+// ====================================================================
+// リアクティブ
+// ====================================================================
 
-    components: {
-        participantPanel,
-    },
+// 参加者表示用のスタイルクラス
+const playerClass = ref(null);
 
-    // ====================================================================
-    // リアクティブ
-    // ====================================================================
+// 参加者名
+const playerName = ref(null);
 
-    data() {
-        return {
-            // 参加者表示用のスタイルクラス
-            playerClass: null,
+// 参加者情報群
+const participantInfos = ref(null);
 
-            // 参加者名
-            playerName: null,
+// 勝敗メッセージ
+const judgementMessage = ref(null);
 
-            // 参加者情報群
-            participantInfos: null,
+// 手ボタンのスタイルクラス
+const guClasses = ref(null);
+const chokiClasses = ref(null);
+const paClasses = ref(null);
 
-            // 勝敗メッセージ
-            judgementMessage: null,
+// 手ボタン無効化
+const isTacticsButtonDisabled = ref(false);
 
-            // 手ボタンのスタイルクラス
-            guClasses: null,
-            chokiClasses: null,
-            paClasses: null,
+// ステータスメッセージ
+const statusMessage = ref(null);
 
-            // 手ボタン無効化
-            isTacticsButtonDisabled: false,
+// エラーメッセージ
+const errorMessage = ref(null);
 
-            // ステータスメッセージ
-            statusMessage: null,
+// ====================================================================
+// イベントハンドラー
+// ====================================================================
 
-            // エラーメッセージ
-            errorMessage: null,
-        };
-    },
+onBeforeMount(() => {
+    // 手ボタン初期化
+    clearTactics();
 
-    // ====================================================================
-    // 関数
-    // ====================================================================
+    // 参加者名が来た
+    props.socket.on(csConstants.socketEvents.playerName, (name) => {
+        playerName.value = name;
+        if (name === "Host") {
+            playerClass.value = "playerHost";
+        } else {
+            playerClass.value = "playerGuest";
+        }
+    });
 
-    methods: {
-        // 手ボタン初期化
-        clearTactics() {
-            this.guClasses = ["tacticsButton"];
-            this.chokiClasses = ["tacticsButton"];
-            this.paClasses = ["tacticsButton"];
-            this.isTacticsButtonDisabled = false;
-        },
+    // 参加者情報群が来た
+    props.socket.on(csConstants.socketEvents.participantInfos, (participantInfosString) => {
+        console.log("participantInfos 到着");
+        const a = JSON.parse(participantInfosString);
+        console.log(a);
+        participantInfos.value = a;
+        //participantInfos.value = JSON.parse(participantInfosString);
+        console.log(participantInfos.value);
+    });
 
-        // グーを出す
-        onTacticsGuClicked() {
-            // ToDo: button.@click の引数に csConstants.tactics.gu を記述すると認識されないのでワンクッション置いている
-            this.sendTactics(csConstants.tactics.gu, this.guClasses);
-        },
+    // 勝敗が来た
+    props.socket.on(csConstants.socketEvents.judgement, (judgement) => {
+        switch (judgement) {
+            case csConstants.judgement.win:
+                judgementMessage.value = "勝ち！　勝利点 +1";
+                break;
+            case csConstants.judgement.lose:
+                judgementMessage.value = "負け...";
+                break;
+            case csConstants.judgement.draw:
+                judgementMessage.value = "あいこ";
+                break;
+        }
+        clearTactics();
+        statusMessage = null;
+    });
 
-        // チョキを出す
-        onTacticsChokiClicked() {
-            this.sendTactics(csConstants.tactics.choki, this.chokiClasses);
-        },
+    // エラー通知が来た
+    props.socket.on(csConstants.socketEvents.errorMessage, (message) => {
+        errorMessage.value = message;
+    });
 
-        // パーを出す
-        onTacticsPaClicked() {
-            this.sendTactics(csConstants.tactics.pa, this.paClasses);
-        },
+    // socket.on イベントハンドラー設定完了後
+    props.socket.emit(csConstants.socketEvents.playReady);
+});
 
-        // 手をサーバーに送信
-        sendTactics(tactics, classes) {
-            // UI 処理
-            this.isTacticsButtonDisabled = true;
-            this.statusMessage = "他の参加者が手を出すのを待っています...";
-            classes.push("selectedButton");
+// ====================================================================
+// 関数
+// ====================================================================
 
-            // 送信
-            this.socket.emit(csConstants.socketEvents.selectTactics, tactics);
-        },
-    },
+// 手ボタン初期化
+function clearTactics() {
+    guClasses.value = ["tacticsButton"];
+    chokiClasses.value = ["tacticsButton"];
+    paClasses.value = ["tacticsButton"];
+    isTacticsButtonDisabled.value = false;
+}
 
-    // ====================================================================
-    // イベントハンドラー
-    // ====================================================================
+// グーを出す
+function onTacticsGuClicked() {
+    // ToDo: button.@click の引数に csConstants.tactics.gu を記述すると認識されないのでワンクッション置いている
+    sendTactics(csConstants.tactics.gu, guClasses);
+}
 
-    beforeMount() {
-        // 手ボタン初期化
-        this.clearTactics();
+// チョキを出す
+function onTacticsChokiClicked() {
+    sendTactics(csConstants.tactics.choki, chokiClasses);
+}
 
-        // 参加者名が来た
-        this.socket.on(csConstants.socketEvents.playerName, (name) => {
-            this.playerName = name;
-            if (name === "Host") {
-                this.playerClass = "playerHost";
-            } else {
-                this.playerClass = "playerGuest";
-            }
-        });
+// パーを出す
+function onTacticsPaClicked() {
+    sendTactics(csConstants.tactics.pa, paClasses);
+}
 
-        // 参加者情報群が来た
-        this.socket.on(csConstants.socketEvents.participantInfos, (participantInfosString) => {
-            this.participantInfos = JSON.parse(participantInfosString);
-            //console.log("participantInfos 到着");
-            //console.log(this.participantInfos);
-        });
+// 手をサーバーに送信
+function sendTactics(tactics, classes) {
+    // UI 処理
+    isTacticsButtonDisabled.value = true;
+    statusMessage.value = "他の参加者が手を出すのを待っています...";
+    classes.value.push("selectedButton");
 
-        // 勝敗が来た
-        this.socket.on(csConstants.socketEvents.judgement, (judgement) => {
-            switch (judgement) {
-                case csConstants.judgement.win:
-                    this.judgementMessage = "勝ち！　勝利点 +1";
-                    break;
-                case csConstants.judgement.lose:
-                    this.judgementMessage = "負け...";
-                    break;
-                case csConstants.judgement.draw:
-                    this.judgementMessage = "あいこ";
-                    break;
-            }
-            this.clearTactics();
-            this.statusMessage = null;
-        });
-
-        // エラー通知が来た
-        this.socket.on(csConstants.socketEvents.errorMessage, (errorMessage) => {
-            this.errorMessage = errorMessage;
-        });
-
-        // socket.on イベントハンドラー設定完了後
-        this.socket.emit(csConstants.socketEvents.playReady);
-    },
+    // 送信
+    props.socket.emit(csConstants.socketEvents.selectTactics, tactics);
 }
 </script>

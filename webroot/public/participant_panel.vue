@@ -86,5 +86,4 @@ function updateRootClasses() {
         rootClasses.value.push(className);
     }
 }
-
 </script>
