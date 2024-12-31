@@ -7,7 +7,7 @@
 <template>
     <div>
         <p id="loungeTitle">ラウンジ（ゲスト）</p>
-        <p>{{ groupUuid }}</p>
+        <p>グループ：{{ groupUuid }}</p>
         <p>ホストが参加者を募集中です。現在の参加者：{{ numParticipants }}</p>
         <p>ホストがプレイ開始するのを待っています...</p>
         <p>{{ errorMessage }}</p>
@@ -20,55 +20,102 @@ p#loungeTitle {
 }
 </style>
 
-<script>
-import loungeBase from "./lounge_base.vue";
+<script setup>
+import { ref, onBeforeMount } from "vue";
 
-export default {
-    // ====================================================================
-    // 継承
-    // ====================================================================
+// ====================================================================
+// 構築時受領
+// ====================================================================
 
-    extends: loungeBase,
+const props = defineProps(["groupConst", "vueApp"]);
 
-    // ====================================================================
-    // 構築時受領
-    // ====================================================================
+// ====================================================================
+// リアクティブ
+// ====================================================================
 
-    props: ["groupConst"],
+// --------------------------------------------------------------------
+// ホスト・ゲスト共通部分
+// --------------------------------------------------------------------
 
-    // ====================================================================
-    // リアクティブ
-    // ====================================================================
+// グループ UUID
+const groupUuid = ref(props.groupConst);
 
-    data() {
-        return {
-        };
-    },
+// 参加人数
+const numParticipants = ref(1);
 
-    // ====================================================================
-    // イベントハンドラー
-    // ====================================================================
+// エラーメッセージ
+const errorMessage = ref(null);
 
-    beforeMount() {
-        // ソケットインスタンス作成時に接続しに行く
-        this.socket = io();
+// ====================================================================
+// 変数
+// ====================================================================
 
-        // 接続時イベント
-        this.socket.on("connect", () => {
-            // 既存グループ参加依頼
-            //console.log(this.socket);
-            //console.log(this.groupConst);
-            this.socket.emit(csConstants.socketEvents.joinGroup, this.groupConst);
-        });
+// --------------------------------------------------------------------
+// ホスト・ゲスト共通部分
+// --------------------------------------------------------------------
 
-        // 人数通知が来た
-        this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
-            //console.log(this.vueApp);
-            this.numParticipants = numParticipants;
-        });
+// ソケット通信用
+let socket = null;
 
-        // ホスト・ゲスト共通イベント
-        this.setSocketOn();
-    },
+// ====================================================================
+// イベントハンドラー
+// ====================================================================
+
+onBeforeMount(() => {
+    // ソケットインスタンス作成時に接続しに行く
+    socket = io();
+
+    // 接続時イベント
+    socket.on("connect", () => {
+        // 既存グループ参加依頼
+        //console.log(this.socket);
+        //console.log(this.groupConst);
+        socket.emit(csConstants.socketEvents.joinGroup, props.groupConst);
+    });
+
+    // 人数通知が来た
+    socket.on(csConstants.socketEvents.numParticipants, (num) => {
+        //console.log(this.vueApp);
+        numParticipants.value = num;
+    });
+
+    // ホスト・ゲスト共通イベント
+    setSocketOnCommon();
+});
+
+// ====================================================================
+// 関数
+// ====================================================================
+
+// --------------------------------------------------------------------
+// ホスト・ゲスト共通部分
+// --------------------------------------------------------------------
+
+// ソケットイベントハンドラー（ホストとゲストの共通部分）を設定
+function setSocketOnCommon() {
+    // プレイ開始通知が来た
+    socket.on(csConstants.socketEvents.startPlay, () => {
+        let vueApp = props.vueApp;
+        //console.log(vueApp);
+        // ToDo: socket.on イベントハンドラー解除
+        vueApp.unmount();
+
+        // 新しいコンポーネント
+        const options = loadModuleOptions();
+        const { loadModule } = window["vue3-sfc-loader"];
+        let playProps = {};
+        playProps["socket"] = socket;
+        vueApp = Vue.createApp(Vue.defineAsyncComponent(() => loadModule("./play.vue", options)), playProps);
+        playProps["vueApp"] = vueApp;
+        vueApp.mount(document.body);
+        //console.log("ラウンジ props");
+        //console.log(props);
+    });
+
+    // エラー通知が来た
+    socket.on(csConstants.socketEvents.errorMessage, (message) => {
+        errorMessage.value = message;
+    });
 }
+
 </script>
