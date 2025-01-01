@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="initial-scale=1.0, width=device-width" name="viewport">
+    <title>Hello, world!</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue3-sfc-loader"></script>
+    <script>
+        function loadModuleOptions() {
+            return {
+                moduleCache: {
+                    vue: Vue
+                },
+                async getFile(url) {
+                    const res = await fetch(url);
+                    if (!res.ok) {
+                        throw Object.assign(new Error(res.statusText + " " + url), { res });
+                    }
+                    return {
+                        getContentData: asBinary => asBinary ? res.arrayBuffer() : res.text(),
+                    }
+                },
+                addStyle(textContent) {
+                    const style = Object.assign(document.createElement("style"), { textContent });
+                    const ref = document.head.getElementsByTagName("style")[0] || null;
+                    document.head.insertBefore(style, ref);
+                },
+            }
+        }
+        window.onload = function () {
+            const options = loadModuleOptions();
+            const { loadModule } = window["vue3-sfc-loader"];
+            const vueApp = Vue.createApp(Vue.defineAsyncComponent(() => loadModule("./hello_world.vue", options)));
+            vueApp.mount(document.body);
+        }
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>
