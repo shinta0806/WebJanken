@@ -1,7 +1,7 @@
 // ============================================================================
 // 
 // Web じゃんけんサーバープログラム
-// Copyright (C) 2024 by SHINTA
+// Copyright (C) 2024-2025 by SHINTA
 // 
 // ============================================================================
 
@@ -14,9 +14,13 @@ console.log("サーバー準備中...");
 // モジュール
 const express = require("express");
 const http = require("http");
-const routesIndex = require("./routes/index");
+
+// データベース作成
+const createDatabase = require("./create_database");
+createDatabase.createDatabase();
 
 // ルーティング
+const routesIndex = require("./routes/index");
 const expressApp = express();
 routesIndex.setRoutesIndex(express, expressApp);
 
