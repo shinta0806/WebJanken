@@ -78,7 +78,6 @@ export default {
         // 接続時イベント
         this.socket.on("connect", () => {
             // 新規グループ作成依頼
-            //console.log(this.socket);
             this.socket.emit(csConstants.socketEvents.newGroup);
         });
 
@@ -93,7 +92,6 @@ export default {
 
         // 人数通知が来た
         this.socket.on(csConstants.socketEvents.numParticipants, (numParticipants) => {
-            //console.log("host 人数通知受領");
             this.numParticipants = numParticipants;
             this.isPlayButtonDisabled = numParticipants === 1;
         });
